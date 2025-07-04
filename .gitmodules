@@ -1,3 +1,6 @@
 [submodule "tools/bletools"]
 	path = tools/bletools
 	url = https://github.com/qrxnz/bletools.git
+[submodule "wordlists"]
+	path = wordlists
+	url = https://github.com/kkrypt0nn/wordlists
