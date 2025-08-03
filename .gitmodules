@@ -4,3 +4,6 @@
 [submodule "wordlists"]
 	path = wordlists
 	url = https://github.com/kkrypt0nn/wordlists
+[submodule "tools/qrack"]
+	path = tools/qrack
+	url = https://github.com/qrxnz/qrack.git
