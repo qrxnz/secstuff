@@ -1,6 +1,6 @@
 # secstuff
 
-This repository is a collection of security-related tools and resources, managed using Git submodules.
+This repository is a collection of security-related tools and resources...
 
 To clone the repository along with all its submodules, use the following command:
 
