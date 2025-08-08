@@ -16,3 +16,6 @@
 [submodule "rockyou"]
 	path = rockyou
 	url = https://github.com/qrxnz/rockyou.git
+[submodule "tools/hack-pet"]
+	path = tools/hack-pet
+	url = https://github.com/qrxnz/hack-pet.git
