@@ -7,3 +7,6 @@
 [submodule "tools/qrack"]
 	path = tools/qrack
 	url = https://github.com/qrxnz/qrack.git
+[submodule "WebHackersWeapons"]
+	path = WebHackersWeapons
+	url = https://github.com/hahwul/WebHackersWeapons
