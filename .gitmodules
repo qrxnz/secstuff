@@ -13,3 +13,6 @@
 [submodule "manuf"]
 	path = manuf
 	url = https://github.com/kkrypt0nn/manuf.git
+[submodule "rockyou"]
+	path = rockyou
+	url = https://github.com/qrxnz/rockyou.git
