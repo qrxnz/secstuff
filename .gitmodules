@@ -10,3 +10,6 @@
 [submodule "WebHackersWeapons"]
 	path = WebHackersWeapons
 	url = https://github.com/hahwul/WebHackersWeapons
+[submodule "manuf"]
+	path = manuf
+	url = https://github.com/kkrypt0nn/manuf.git
