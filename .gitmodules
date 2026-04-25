@@ -1,16 +1,16 @@
 [submodule "tools/bletools"]
 	path = tools/bletools
 	url = https://github.com/qrxnz/bletools.git
-[submodule "wordlists"]
-	path = wordlists
+[submodule "lists/wordlists"]
+	path = lists/wordlists
 	url = https://github.com/kkrypt0nn/wordlists
 [submodule "tools/qrack"]
 	path = tools/qrack
 	url = https://github.com/qrxnz/qrack.git
-[submodule "manuf"]
-	path = manuf
+[submodule "lists/manuf"]
+	path = lists/manuf
 	url = https://github.com/kkrypt0nn/manuf.git
-[submodule "rockyou"]
+[submodule "lists/rockyou"]
 	path = rockyou
 	url = https://github.com/qrxnz/rockyou.git
 [submodule "tools/qira"]
