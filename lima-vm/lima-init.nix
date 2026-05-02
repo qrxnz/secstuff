@@ -20,9 +20,11 @@ let
     cp -f ${./configuration.nix} /etc/nixos/configuration.nix
     cp -f ${./lima-init.nix} /etc/nixos/lima-init.nix
     cp -f ${./lima-runtime.nix} /etc/nixos/lima-runtime.nix
+    cp -f ${./pkgs.nix} /etc/nixos/pkgs.nix
     chmod 664 /etc/nixos/configuration.nix
     chmod 664 /etc/nixos/lima-init.nix
     chmod 664 /etc/nixos/lima-runtime.nix
+    chmod 664 /etc/nixos/pkgs.nix
     sed -i 's@imports = \[];@imports = \[ "/etc/nixos/lima-runtime.nix" ];@g' /etc/nixos/lima-init.nix
 
     nixos-rebuild switch
