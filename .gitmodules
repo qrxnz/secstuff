@@ -10,3 +10,6 @@
 [submodule "docker-android"]
 	path = docker-android
 	url = https://github.com/qrxnz/docker-android
+[submodule "GhidraMacOS"]
+	path = GhidraMacOS
+	url = https://github.com/qrxnz/GhidraMacOS.git
