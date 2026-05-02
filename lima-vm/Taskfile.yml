@@ -1,0 +1,148 @@
+version: '3'
+
+vars:
+  INSTANCE: nixos
+  BUILDER: nixbuild
+  BUILD_CONTAINER: lima-vm-nix-build
+  IMAGE: imgs/nixos-aarch64.img
+  IMAGE_BASENAME: nixos-aarch64.img
+  BUILDER_CPUS: 8
+  BUILDER_MEMORY: 10
+  BUILDER_DISK: 100
+  BUILDER_DOCKER: /Users/qrxnz/.lima/{{.BUILDER}}/sock/docker.sock
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  check:
+    desc: Check required host tools
+    cmds:
+      - command -v limactl >/dev/null
+      - command -v docker >/dev/null
+      - command -v task >/dev/null
+
+  check-qemu:
+    desc: Check that QEMU is installed for aarch64
+    cmds:
+      - command -v qemu-system-aarch64 >/dev/null
+
+  install-qemu:
+    desc: Install QEMU with Homebrew
+    cmds:
+      - brew install qemu
+
+  build:
+    desc: Build the NixOS raw EFI image used by Lima
+    deps:
+      - check
+    cmds:
+      - mkdir -p imgs /tmp/lima
+      - |
+        set -eu
+        if limactl list | awk 'NR > 1 {print $1}' | grep -qx '{{.BUILDER}}'; then
+          limactl start '{{.BUILDER}}' >/dev/null || true
+        else
+          limactl start \
+            --name='{{.BUILDER}}' \
+            --memory='{{.BUILDER_MEMORY}}' \
+            --cpus='{{.BUILDER_CPUS}}' \
+            --disk='{{.BUILDER_DISK}}' \
+            template:docker
+        fi
+      - docker -H unix://{{.BUILDER_DOCKER}} rm -f '{{.BUILD_CONTAINER}}' >/dev/null 2>&1 || true
+      - |
+        docker -H unix://{{.BUILDER_DOCKER}} run \
+          --name '{{.BUILD_CONTAINER}}' \
+          -v '{{.ROOT_DIR}}:/src:ro' \
+          nixos/nix \
+          sh -lc 'nix --option sandbox false --option system-features "benchmark big-parallel nixos-test uid-range kvm" --extra-experimental-features nix-command --extra-experimental-features flakes build /src#packages.aarch64-linux.box --out-link /tmp/result && cp -L /tmp/result/nixos.img /tmp/{{.IMAGE_BASENAME}}'
+      - docker -H unix://{{.BUILDER_DOCKER}} cp '{{.BUILD_CONTAINER}}:/tmp/{{.IMAGE_BASENAME}}' '{{.IMAGE}}'
+      - chmod 644 '{{.IMAGE}}'
+      - docker -H unix://{{.BUILDER_DOCKER}} rm -f '{{.BUILD_CONTAINER}}' >/dev/null
+
+  clean-builder:
+    desc: Remove the temporary build VM and build container
+    cmds:
+      - docker -H unix://{{.BUILDER_DOCKER}} rm -f '{{.BUILD_CONTAINER}}' >/dev/null 2>&1 || true
+      - limactl delete -f '{{.BUILDER}}' >/dev/null 2>&1 || true
+
+  start:
+    desc: Start the NixOS VM with QEMU
+    deps:
+      - check
+      - check-qemu
+    cmds:
+      - test -f '{{.IMAGE}}'
+      - mkdir -p /tmp/lima
+      - |
+        set -eu
+        instance='{{.INSTANCE}}'
+        if limactl list | awk 'NR > 1 {print $1}' | grep -qx "$instance"; then
+          status="$(limactl list | awk -v name="$instance" '$1 == name {print $2}')"
+          if [ "$status" = "Running" ]; then
+            task fix-ready INSTANCE="$instance"
+            exit 0
+          fi
+          limactl start "$instance" &
+        else
+          limactl start --name="$instance" --vm-type=qemu aarch64.yml &
+        fi
+
+        pid="$!"
+        ssh_config="$HOME/.lima/$instance/ssh.config"
+        ssh_host="lima-$instance"
+
+        for _ in $(seq 1 120); do
+          if [ -f "$ssh_config" ] && ssh -F "$ssh_config" "$ssh_host" true >/dev/null 2>&1; then
+            task fix-ready INSTANCE="$instance"
+            break
+          fi
+          sleep 3
+        done
+
+        wait "$pid"
+
+  recreate:
+    desc: Delete and recreate the NixOS VM
+    deps:
+      - check
+      - check-qemu
+    cmds:
+      - limactl delete -f '{{.INSTANCE}}' >/dev/null 2>&1 || true
+      - task start INSTANCE='{{.INSTANCE}}'
+
+  fix-ready:
+    desc: Set Lima readiness markers required by current Lima versions
+    deps:
+      - check
+    cmds:
+      - |
+        set -eu
+        instance='{{.INSTANCE}}'
+        ssh_config="$HOME/.lima/$instance/ssh.config"
+        ssh_host="lima-$instance"
+        iid="$(ssh -F "$ssh_config" "$ssh_host" "sudo sed -n 's/^LIMA_CIDATA_IID=//p' /mnt/lima-cidata/lima.env")"
+        ssh -F "$ssh_config" "$ssh_host" "printf '$iid' | sudo tee /run/lima-ssh-ready >/dev/null && sudo chmod 644 /run/lima-ssh-ready && printf '$iid' | sudo tee /run/lima-boot-done >/dev/null && sudo chmod 644 /run/lima-boot-done"
+
+  shell:
+    desc: Open a shell in the NixOS VM
+    cmds:
+      - limactl shell '{{.INSTANCE}}'
+
+  stop:
+    desc: Stop the NixOS VM
+    cmds:
+      - limactl stop '{{.INSTANCE}}'
+
+  delete:
+    desc: Delete the NixOS VM
+    cmds:
+      - limactl delete -f '{{.INSTANCE}}'
+
+  status:
+    desc: Show Lima instances
+    cmds:
+      - limactl list
