@@ -7,3 +7,6 @@
 [submodule "lists/rockyou"]
 	path = rockyou
 	url = https://github.com/qrxnz/rockyou.git
+[submodule "docker-android"]
+	path = docker-android
+	url = https://github.com/qrxnz/docker-android
