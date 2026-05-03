@@ -3,7 +3,6 @@
     imports = [
         (modulesPath + "/profiles/qemu-guest.nix")
         ./lima-init.nix
-        ./pkgs.nix
     ];
 
     # ssh
@@ -35,4 +34,8 @@
     # misc
     boot.kernelPackages = pkgs.linuxPackages_latest;
 
+    # pkgs
+    environment.systemPackages = with pkgs; [
+        vim
+    ];
 }
