@@ -49,5 +49,6 @@
     amass
 
     binwalk
+    radare2
   ];
 }
