@@ -42,7 +42,12 @@
   # pkgs
   environment.systemPackages = with pkgs; [
     vim
+
+    gau
     nmap
+    ffuf
+    amass
+
+    binwalk
   ];
 }
-
