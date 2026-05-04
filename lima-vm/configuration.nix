@@ -50,5 +50,6 @@
 
     binwalk
     radare2
+    ropgadget
   ];
 }
