@@ -48,6 +48,7 @@
     ffuf
     amass
 
+    exiftool
     binwalk
     radare2
     ropgadget
