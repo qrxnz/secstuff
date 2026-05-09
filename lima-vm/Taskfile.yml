@@ -2,10 +2,15 @@ version: '3'
 
 vars:
   INSTANCE: nixos
-  BUILDER: nixbuild
-  BUILD_CONTAINER: lima-vm-nix-build
-  IMAGE: imgs/nixos-aarch64.img
-  IMAGE_BASENAME: nixos-aarch64.img
+  ARCH: aarch64
+  BUILDER: 'nixbuild-{{if eq .ARCH "x86_64"}}x86{{else}}aarch64{{end}}'
+  BUILD_CONTAINER: 'lima-vm-nix-build-{{if eq .ARCH "x86_64"}}x86{{else}}aarch64{{end}}'
+  NIX_SYSTEM: '{{if eq .ARCH "x86_64"}}x86_64-linux{{else}}aarch64-linux{{end}}'
+  IMAGE: 'imgs/nixos-{{if eq .ARCH "x86_64"}}x86{{else}}aarch64{{end}}.img'
+  IMAGE_BASENAME: 'nixos-{{if eq .ARCH "x86_64"}}x86{{else}}aarch64{{end}}.img'
+  LIMA_CONFIG: '{{if eq .ARCH "x86_64"}}x86.yaml{{else}}aarch64.yml{{end}}'
+  BUILDER_ARCH: '{{if eq .ARCH "x86_64"}}x86_64{{else}}aarch64{{end}}'
+  BUILDER_VM_TYPE: '{{if eq .ARCH "x86_64"}}qemu{{else}}vz{{end}}'
   BUILDER_CPUS: 8
   BUILDER_MEMORY: 10
   BUILDER_DISK: 100
@@ -29,15 +34,40 @@ tasks:
     cmds:
       - command -v qemu-system-aarch64 >/dev/null
 
+  check-x86-guestagent:
+    desc: Check that Lima x86_64 guest agent is installed
+    cmds:
+      - |
+        set -eu
+        if [ '{{.ARCH}}' != 'x86_64' ]; then
+          exit 0
+        fi
+        lima_share="$(brew --prefix lima)/share/lima"
+        additional_share="$(brew --prefix lima-additional-guestagents 2>/dev/null)/share/lima"
+        if [ ! -f "$lima_share/lima-guestagent.Linux-x86_64" ] \
+          && [ ! -f "$lima_share/lima-guestagent.Linux-x86_64.gz" ] \
+          && [ ! -f "$additional_share/lima-guestagent.Linux-x86_64" ] \
+          && [ ! -f "$additional_share/lima-guestagent.Linux-x86_64.gz" ]; then
+          printf '%s\n' 'Missing Lima Linux-x86_64 guest agent.' >&2
+          printf '%s\n' 'Run: task install-x86-guestagent' >&2
+          exit 1
+        fi
+
   install-qemu:
     desc: Install QEMU with Homebrew
     cmds:
       - brew install qemu
 
+  install-x86-guestagent:
+    desc: Install Lima additional guest agents with Homebrew
+    cmds:
+      - brew install lima-additional-guestagents
+
   build:
     desc: Build the NixOS raw EFI image used by Lima
     deps:
       - check
+      - check-x86-guestagent
     cmds:
       - mkdir -p imgs /tmp/lima
       - |
@@ -47,6 +77,8 @@ tasks:
         else
           limactl start \
             --name='{{.BUILDER}}' \
+            --arch='{{.BUILDER_ARCH}}' \
+            --vm-type='{{.BUILDER_VM_TYPE}}' \
             --memory='{{.BUILDER_MEMORY}}' \
             --cpus='{{.BUILDER_CPUS}}' \
             --disk='{{.BUILDER_DISK}}' \
@@ -58,10 +90,20 @@ tasks:
           --name '{{.BUILD_CONTAINER}}' \
           -v '{{.ROOT_DIR}}:/src:ro' \
           nixos/nix \
-          sh -lc 'nix --option sandbox false --option system-features "benchmark big-parallel nixos-test uid-range kvm" --extra-experimental-features nix-command --extra-experimental-features flakes build /src#packages.aarch64-linux.box --out-link /tmp/result && cp -L /tmp/result/nixos.img /tmp/{{.IMAGE_BASENAME}}'
+          sh -lc 'nix --option sandbox false --option system-features "benchmark big-parallel nixos-test uid-range kvm" --extra-experimental-features nix-command --extra-experimental-features flakes build /src#packages.{{.NIX_SYSTEM}}.box --out-link /tmp/result && cp -L /tmp/result/nixos.img /tmp/{{.IMAGE_BASENAME}}'
       - docker -H unix://{{.BUILDER_DOCKER}} cp '{{.BUILD_CONTAINER}}:/tmp/{{.IMAGE_BASENAME}}' '{{.IMAGE}}'
       - chmod 644 '{{.IMAGE}}'
       - docker -H unix://{{.BUILDER_DOCKER}} rm -f '{{.BUILD_CONTAINER}}' >/dev/null
+
+  build-arm:
+    desc: Build the aarch64 NixOS raw EFI image
+    cmds:
+      - task build ARCH=aarch64
+
+  build-x86:
+    desc: Build the x86_64 NixOS raw EFI image
+    cmds:
+      - task build ARCH=x86_64
 
   clean-builder:
     desc: Remove the temporary build VM and build container
@@ -88,7 +130,7 @@ tasks:
           fi
           limactl start "$instance" &
         else
-          limactl start --name="$instance" --vm-type=qemu aarch64.yml &
+          limactl start --name="$instance" --vm-type=qemu '{{.LIMA_CONFIG}}' &
         fi
 
         pid="$!"
@@ -112,7 +154,27 @@ tasks:
       - check-qemu
     cmds:
       - limactl delete -f '{{.INSTANCE}}' >/dev/null 2>&1 || true
-      - task start INSTANCE='{{.INSTANCE}}'
+      - task start INSTANCE='{{.INSTANCE}}' ARCH='{{.ARCH}}'
+
+  start-arm:
+    desc: Start the aarch64 NixOS VM with QEMU
+    cmds:
+      - task start ARCH=aarch64 INSTANCE='{{.INSTANCE}}'
+
+  start-x86:
+    desc: Start the x86_64 NixOS VM with QEMU
+    cmds:
+      - task start ARCH=x86_64 INSTANCE='{{.INSTANCE}}'
+
+  recreate-arm:
+    desc: Delete and recreate the aarch64 NixOS VM
+    cmds:
+      - task recreate ARCH=aarch64 INSTANCE='{{.INSTANCE}}'
+
+  recreate-x86:
+    desc: Delete and recreate the x86_64 NixOS VM
+    cmds:
+      - task recreate ARCH=x86_64 INSTANCE='{{.INSTANCE}}'
 
   fix-ready:
     desc: Set Lima readiness markers required by current Lima versions
