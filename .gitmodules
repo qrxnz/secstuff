@@ -1,10 +1,10 @@
-[submodule "lists/wordlists"]
-	path = lists/wordlists
+[submodule "wordlists/wordlists"]
+	path = wordlists/wordlists
 	url = https://github.com/kkrypt0nn/wordlists
-[submodule "lists/manuf"]
-	path = lists/manuf
+[submodule "wordlists/manuf"]
+	path = wordlists/manuf
 	url = https://github.com/kkrypt0nn/manuf.git
-[submodule "lists/rockyou"]
+[submodule "wordlists/rockyou"]
 	path = rockyou
 	url = https://github.com/qrxnz/rockyou.git
 [submodule "docker-android"]
