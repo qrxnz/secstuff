@@ -6,7 +6,13 @@
     nixpkgs,
     utils,
   }:
-    utils.lib.eachDefaultSystem (
+    {
+      templates.pwntools-nix = {
+        path = ./templates/pwntools-nix;
+        description = "Pwntools Nix development template";
+      };
+    }
+    // utils.lib.eachDefaultSystem (
       system: let
         pkgs = import nixpkgs {inherit system;};
       in {
