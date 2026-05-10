@@ -10,3 +10,6 @@
 [submodule "ghidra-osx"]
 	path = ghidra-osx
 	url = https://github.com/qrxnz/ghidra-osx.git
+[submodule "busybox-binaries"]
+	path = busybox-binaries
+	url = https://github.com/qrxnz/busybox-binaries.git
