@@ -1,9 +1,6 @@
 [submodule "wordlists/wordlists"]
 	path = wordlists/wordlists
 	url = https://github.com/kkrypt0nn/wordlists
-[submodule "wordlists/manuf"]
-	path = wordlists/manuf
-	url = https://github.com/kkrypt0nn/manuf.git
 [submodule "wordlists/rockyou"]
 	path = rockyou
 	url = https://github.com/qrxnz/rockyou.git
