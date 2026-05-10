@@ -7,3 +7,6 @@
 [submodule "docker-android"]
 	path = docker-android
 	url = https://github.com/qrxnz/docker-android
+[submodule "ghidra-osx"]
+	path = ghidra-osx
+	url = https://github.com/qrxnz/ghidra-osx.git
