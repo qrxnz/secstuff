@@ -13,3 +13,7 @@
 [submodule "busybox-binaries"]
 	path = busybox-binaries
 	url = https://github.com/qrxnz/busybox-binaries.git
+
+[submodule "others/nightmare-eclipse"]
+	path = others/nightmare-eclipse
+	url = https://github.com/qrxnz/nightmare-eclipse
